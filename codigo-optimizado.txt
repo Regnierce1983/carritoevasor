@@ -1,0 +1,108 @@
+#include <NewPing.h>
+#include <Servo.h>
+
+#define TRIG_PIN A0
+#define ECHO_PIN A1
+#define MAX_DISTANCE 200
+
+NewPing sonar(TRIG_PIN, ECHO_PIN, MAX_DISTANCE);
+Servo myservo;
+
+const int motorPin1  = 8;
+const int motorPin2  = 9;
+const int motorPin3  = 5;
+const int motorPin4  = 6;
+
+void setup() {
+  myservo.attach(3);
+  myservo.write(115);
+  delay(2000);
+}
+
+void loop() {
+  int distance = readPing();
+  if (distance <= 15) {
+    moveStop();
+    delay(200);
+    moveBackward();
+    delay(800);
+    moveStop();
+    delay(200);
+    int distanceR = lookRight();
+    delay(200);
+    int distanceL = lookLeft();
+    delay(200);
+    if (distanceR >= distanceL) {
+      turnRight();
+    } else {
+      turnLeft();
+    }
+  } else {
+    moveForward();
+  }
+}
+
+int readPing() {
+  int cm = sonar.ping_cm();
+  if (cm == 0) {
+    cm = 250;
+  }
+  return cm;
+}
+
+int lookRight() {
+  myservo.write(50);
+  delay(500);
+  int distance = readPing();
+  delay(100);
+  myservo.write(115);
+  return distance;
+}
+
+int lookLeft() {
+  myservo.write(170);
+  delay(500);
+  int distance = readPing();
+  delay(100);
+  myservo.write(115);
+  return distance;
+}
+
+inline void moveStop() {
+  analogWrite(motorPin1, 0);
+  analogWrite(motorPin2, 0);
+  analogWrite(motorPin3, 0);
+  analogWrite(motorPin4, 0);
+}
+
+inline void moveForward() {
+  analogWrite(motorPin1, 180);
+  analogWrite(motorPin2, 0);
+  analogWrite(motorPin3, 180);
+  analogWrite(motorPin4, 0);
+}
+
+inline void moveBackward() {
+  analogWrite(motorPin1, 0);
+  analogWrite(motorPin2, 180);
+  analogWrite(motorPin3, 0);
+  analogWrite(motorPin4, 180);
+}
+
+inline void turnRight() {
+  analogWrite(motorPin1, 180);
+  analogWrite(motorPin2, 0);
+  analogWrite(motorPin3, 0);
+  analogWrite(motorPin4, 180);
+  delay(300);
+  moveForward();
+}
+
+inline void turnLeft() {
+  analogWrite(motorPin1, 0);
+  analogWrite(motorPin2, 0);
+  analogWrite(motorPin3, 0);
+  analogWrite(motorPin4, 180);
+  delay(300);
+  moveForward();
+}

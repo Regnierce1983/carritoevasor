@@ -1,0 +1,124 @@
+#include <NewPing.h>
+#include <Servo.h>
+#include <SoftPWM.h>
+
+#define TRIG_PIN A0
+#define ECHO_PIN A1
+#define MAX_DISTANCE 200
+
+NewPing sonar(TRIG_PIN, ECHO_PIN, MAX_DISTANCE);
+Servo myservo;
+
+int distance = 100;
+int distanceR = 0;
+int distanceL = 0;
+int servoPos = 115;
+int motorSpeed = 0;
+
+const int motorPin1  = 8;
+const int motorPin2  = 9;
+const int motorPin3  = 5;
+const int motorPin4  = 6;
+
+unsigned long previousTime = 0;
+const long interval = 50;
+
+void setup() {
+  myservo.attach(3);
+  SoftPWMBegin();
+  moveStop();
+  delay(2000);
+}
+
+void loop() {
+  unsigned long currentTime = millis();
+
+  if (currentTime - previousTime >= interval) {
+    distance = readPing();
+    distanceR = lookRight();
+    distanceL = lookLeft();
+    previousTime = currentTime;
+  }
+
+  if (distance <= 15) {
+    moveStop();
+    delay(200);
+    moveBackward();
+    delay(800);
+    moveStop();
+    delay(200);
+
+    if (distanceR >= distanceL) {
+      turnRight();
+    } else {
+      turnLeft();
+    }
+  } else {
+    moveForward();
+  }
+}
+
+int readPing() { 
+  int cm = sonar.ping_cm();
+  if (cm == 0) {
+    cm = 250;
+  }
+  return cm;
+}
+
+int lookRight() {
+  myservo.write(50);
+  delay(500);
+  int distance = readPing();
+  delay(100);
+  myservo.write(servoPos);
+  return distance;
+}
+
+int lookLeft() {
+  myservo.write(170);
+  delay(500);
+  int distance = readPing();
+  delay(100);
+  myservo.write(servoPos);
+  return distance;
+}
+
+void moveStop() {
+  SoftPWMSet(motorPin1, 0);
+  SoftPWMSet(motorPin2, 0);
+  SoftPWMSet(motorPin3, 0);
+  SoftPWMSet(motorPin4, 0);
+}
+
+void moveForward() {
+  SoftPWMSet(motorPin1, motorSpeed);
+  SoftPWMSet(motorPin2, 0);
+  SoftPWMSet(motorPin3, motorSpeed);
+  SoftPWMSet(motorPin4, 0);
+}
+
+void moveBackward() {
+  SoftPWMSet(motorPin1, 0);
+  SoftPWMSet(motorPin2, motorSpeed);
+  SoftPWMSet(motorPin3, 0);
+  SoftPWMSet(motorPin4, motorSpeed);
+}
+
+void turnRight() {
+  SoftPWMSet(motorPin1, motorSpeed);
+  SoftPWMSet(motorPin2, 0);
+  SoftPWMSet(motorPin3, 0);
+  SoftPWMSet(motorPin4, motorSpeed);
+  delay(300);
+  moveForward();
+}
+
+void turnLeft() {
+  SoftPWMSet(motorPin1, 0);
+  SoftPWMSet(motorPin2, motorSpeed);
+  SoftPWMSet(motorPin3, motorSpeed);
+  SoftPWMSet(motorPin4, 0);
+  delay(300);
+  moveForward();
+}

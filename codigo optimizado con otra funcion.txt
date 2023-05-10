@@ -1,0 +1,132 @@
+#include <NewPing.h> //agrega la librería NewPing al programa de Arduino. Esta librería permite utilizar el sensor de ultrasonido HC-SR04 para medir distancias de manera sencilla en proyectos de Arduino. La librería proporciona una función ping_cm() que devuelve la distancia en centímetros a la que se encuentra un objeto del sensor. También proporciona otras funciones para medir la distancia en pulgadas o microsegundos. Al incluir esta librería en el programa, se puede utilizar la función ping_cm() para obtener lecturas de distancia en el código del proyecto.
+#include <Servo.h> //es una directiva del preprocesador en el lenguaje de programación de Arduino que permite el uso de la librería Servo. La librería Servo de Arduino se utiliza para controlar los servomotores, que son dispositivos que se utilizan para mover y controlar objetos en una posición específica. La inclusión de la librería Servo en el código permite al programador interactuar con los servomotores conectados al microcontrolador de Arduino, y enviar señales precisas de control de posición para controlar su movimiento.
+
+#define TRIG_PIN A0
+#define ECHO_PIN A1
+#define MAX_DISTANCE 200
+NewPing sonar(TRIG_PIN, ECHO_PIN, MAX_DISTANCE);
+Servo myservo;
+
+const int motorPin1 = 8;
+const int motorPin2 = 9;
+const int motorPin3 = 5;
+const int motorPin4 = 6;
+
+unsigned long previousMillis = 0;
+unsigned long pingInterval = 100;
+unsigned long turnInterval = 300;
+int distance = 0;
+int distanceR = 0;
+int distanceL = 0;
+int speedSet = 0;
+boolean goesForward = false;
+
+void setup() {
+  myservo.attach(3);
+  myservo.write(115);
+  delay(2000);
+  distance = readPing();
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - previousMillis >= pingInterval) {
+    previousMillis = currentMillis;
+    distance = readPing();
+  }
+
+  if (distance <= 15) {
+    moveStop();
+    delay(200);
+    moveBackward();
+    delay(800);
+    moveStop();
+    delay(200);
+    distanceR = lookRight();
+    delay(200);
+    distanceL = lookLeft();
+    delay(200);
+
+    if (distanceR >= distanceL) {
+      turnRight();
+    } else {
+      turnLeft();
+    }
+  } else {
+    moveForward();
+  }
+}
+
+int readPing() {
+  int cm = sonar.ping_cm();
+  if (cm == 0) {
+    cm = 250;
+  }
+  return cm;
+}
+
+void moveStop() {
+  analogWrite(motorPin1, 0);
+  analogWrite(motorPin2, 0);
+  analogWrite(motorPin3, 0);
+  analogWrite(motorPin4, 0);
+}
+
+void moveForward() {
+  analogWrite(motorPin1, 180);
+  analogWrite(motorPin2, 0);
+  analogWrite(motorPin3, 180);
+  analogWrite(motorPin4, 0);
+}
+
+void moveBackward() {
+  analogWrite(motorPin1, 0);
+  analogWrite(motorPin2, 180);
+  analogWrite(motorPin3, 0);
+  analogWrite(motorPin4, 180);
+}
+
+void turnRight() {
+  analogWrite(motorPin1, 180);
+  analogWrite(motorPin2, 0);
+  analogWrite(motorPin3, 0);
+  analogWrite(motorPin4, 180);
+  delay(turnInterval);
+  moveForward();
+}
+
+void turnLeft() {
+  analogWrite(motorPin1, 0);
+  analogWrite(motorPin2, 180);
+  analogWrite(motorPin3, 180);
+  analogWrite(motorPin4, 0);
+  delay(turnInterval);
+  moveForward();
+}
+
+int lookRight() {
+  myservo.write(50);
+  delay(500);
+  int distance = readPing();
+  delay(100);
+  myservo.write(115);
+  return distance;
+}
+
+int lookLeft() {
+  myservo.write(170);
+  delay(500);
+  int distance = readPing();
+  delay(100);
+  myservo.write(115);
+  return distance;
+}
+
+//La función millis() se utiliza para crear un temporizador y realizar acciones en intervalos de tiempo específicos. En este caso, el código se ha modificado para que el sensor ultrasónico se lea cada 100 miliseg
+//Utilizar la biblioteca SoftPWM: en lugar de usar la función analogWrite(), que es bloqueante, puedes utilizar la biblioteca SoftPWM para generar señales PWM suaves y no bloqueantes para controlar los motores.
+
+
+
+
+
